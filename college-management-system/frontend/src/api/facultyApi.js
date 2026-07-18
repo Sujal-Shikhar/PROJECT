@@ -66,3 +66,11 @@ export const deleteFaculty = async (id) => {
 
   return data;
 };
+
+/*
+==========================================
+GET ALL FACULTIES (Alias)
+==========================================
+*/
+
+export const getFaculties = getFaculty;

@@ -56,6 +56,27 @@ export default function StudentForm({
         </div>
 
         <div>
+  <label className="block mb-1 font-medium">
+    Phone
+  </label>
+
+  <input
+    {...register("phone", {
+      required: "Phone is required",
+      pattern: {
+        value: /^[6-9]\d{9}$/,
+        message: "Enter valid phone number",
+      },
+    })}
+    className="w-full border rounded-lg p-2"
+  />
+
+  <p className="text-red-500 text-sm">
+    {errors.phone?.message}
+  </p>
+</div>
+
+        <div>
           <label className="block mb-1 font-medium">
             Roll Number
           </label>
@@ -113,8 +134,9 @@ export default function StudentForm({
 
           <select
             {...register("semester", {
-              required: true,
-            })}
+  required: "Semester is required",
+  valueAsNumber: true,
+})}
             className="w-full border rounded-lg p-2"
           >
             <option value="">Select Semester</option>
@@ -152,6 +174,24 @@ export default function StudentForm({
             className="w-full border rounded-lg p-2"
           />
         </div>
+
+        <div>
+  <label className="block mb-1 font-medium">
+    Academic Year
+  </label>
+
+  <input
+    placeholder="2024-2025"
+    {...register("academicYear", {
+      required: "Academic Year is required",
+    })}
+    className="w-full border rounded-lg p-2"
+  />
+
+  <p className="text-red-500 text-sm">
+    {errors.academicYear?.message}
+  </p>
+</div>
 
       </div>
 

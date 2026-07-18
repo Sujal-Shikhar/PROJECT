@@ -303,7 +303,7 @@ PRE SAVE
 ====================================
 */
 
-facultySchema.pre("save", function (next) {
+facultySchema.pre("save", function () {
   if (this.email) {
     this.email = this.email.toLowerCase();
   }
@@ -313,7 +313,7 @@ facultySchema.pre("save", function (next) {
       this.employeeId.toUpperCase();
   }
 
-  next();
+  
 });
 
 module.exports = mongoose.model(

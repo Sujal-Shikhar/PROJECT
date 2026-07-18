@@ -142,7 +142,7 @@ exports.createResult = async (
         exam,
 
         internalMarks:
-          internal.totalInternalMarks,
+  internal.totalInternalMarks,
 
         externalMarks,
 

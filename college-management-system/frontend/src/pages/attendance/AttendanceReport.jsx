@@ -1,130 +1,269 @@
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import {
-  useEffect,
-  useState,
-} from "react";
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
 
-import API from "../../api/axios";
-import { useParams } from "react-router-dom";
-import Layout from "../../components/layout/Layout";
+import {
+  getAttendanceReport,
+  getMonthlyReport,
+} from "../../api/attendanceReportApi";
 
-const AttendanceReport = () => {
-  const { id } = useParams();
-
-  const [report, setReport] =
-    useState(null);
+export default function AttendanceReport() {
+  const [report, setReport] = useState([]);
+  const [monthly, setMonthly] = useState([]);
 
   useEffect(() => {
-    fetchReport();
+    loadData();
   }, []);
 
-  const fetchReport =
-    async () => {
-      const res =
-        await API.get(
-          `/attendance/report/${id}`
-        );
+  const loadData = async () => {
+    try {
+      const overall =
+        await getAttendanceReport();
 
-      setReport(res.data);
-    };
+      const month =
+        await getMonthlyReport();
 
-  if (!report)
-    return (
-      <Layout>
-        Loading...
-      </Layout>
-    );
+      setReport(overall.report);
+      setMonthly(month.report);
+    } catch (err) {
+      console.error(err);
+      toast.error("Unable to load report");
+    }
+  };
 
   return (
-    <Layout>
-      <div className="p-6">
+    <div className="space-y-6">
 
-        <h1 className="text-3xl font-bold mb-6">
-          Attendance Report
-        </h1>
+      <h1 className="text-3xl font-bold">
+        Attendance Report
+      </h1>
 
-        <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid md:grid-cols-4 gap-5">
 
-          <div className="bg-white p-4 shadow rounded">
-            <h3>Total Classes</h3>
-            <p className="text-2xl font-bold">
-              {
-                report.totalClasses
-              }
-            </p>
-          </div>
+        <Card
+          title="Students"
+          value={report.length}
+        />
 
-          <div className="bg-white p-4 shadow rounded">
-            <h3>Present</h3>
-            <p className="text-2xl font-bold">
-              {report.present}
-            </p>
-          </div>
+        <Card
+          title="Average %"
+          value={
+            report.length
+              ? (
+                  report.reduce(
+                    (a, b) =>
+                      a + b.percentage,
+                    0
+                  ) / report.length
+                ).toFixed(2)
+              : 0
+          }
+        />
 
-          <div className="bg-white p-4 shadow rounded">
-            <h3>Absent</h3>
-            <p className="text-2xl font-bold">
-              {report.absent}
-            </p>
-          </div>
+        <Card
+          title="Highest"
+          value={
+            report.length
+              ? Math.max(
+                  ...report.map(
+                    (i) =>
+                      i.percentage
+                  )
+                )
+              : 0
+          }
+        />
 
-          <div className="bg-white p-4 shadow rounded">
-            <h3>Percentage</h3>
-            <p className="text-2xl font-bold">
-              {
-                report.percentage
-              }
-              %
-            </p>
-          </div>
+        <Card
+          title="Lowest"
+          value={
+            report.length
+              ? Math.min(
+                  ...report.map(
+                    (i) =>
+                      i.percentage
+                  )
+                )
+              : 0
+          }
+        />
 
-        </div>
+      </div>
 
-        <table className="w-full border">
-          <thead>
+      <div className="bg-white rounded-xl shadow p-5">
+
+        <h2 className="font-semibold text-xl mb-5">
+          Monthly Attendance
+        </h2>
+
+        <ResponsiveContainer
+          width="100%"
+          height={350}
+        >
+          <BarChart
+            data={monthly}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+
+            <XAxis
+              dataKey="month"
+            />
+
+            <YAxis />
+
+            <Tooltip />
+
+            <Bar
+              dataKey="percentage"
+            />
+
+          </BarChart>
+        </ResponsiveContainer>
+
+      </div>
+
+      <div className="bg-white rounded-xl shadow overflow-auto">
+
+        <table className="min-w-full">
+
+          <thead className="bg-gray-100">
+
             <tr>
-              <th className="border p-2">
-                Subject
+
+              <th className="p-3">
+                Roll
               </th>
 
-              <th className="border p-2">
-                Status
+              <th className="p-3">
+                Name
               </th>
 
-              <th className="border p-2">
-                Date
+              <th className="p-3">
+                Department
               </th>
+
+              <th className="p-3">
+                Semester
+              </th>
+
+              <th className="p-3">
+                Total
+              </th>
+
+              <th className="p-3">
+                Present
+              </th>
+
+              <th className="p-3">
+                Absent
+              </th>
+
+              <th className="p-3">
+                %
+              </th>
+
             </tr>
+
           </thead>
 
           <tbody>
-            {report.records.map(
-              (r) => (
-                <tr key={r._id}>
-                  <td className="border p-2">
-                    {
-                      r.subject
-                        ?.subjectName
-                    }
-                  </td>
 
-                  <td className="border p-2">
-                    {r.status}
-                  </td>
+            {report.map((student) => (
 
-                  <td className="border p-2">
-                    {new Date(
-                      r.date
-                    ).toLocaleDateString()}
-                  </td>
-                </tr>
-              )
-            )}
+              <tr
+                key={student.studentId}
+                className="border-t"
+              >
+
+                <td className="p-3">
+                  {student.rollNumber}
+                </td>
+
+                <td className="p-3">
+                  {student.name}
+                </td>
+
+                <td className="p-3">
+                  {student.department}
+                </td>
+
+                <td className="p-3">
+                  {student.semester}
+                </td>
+
+                <td className="p-3">
+                  {student.totalClasses}
+                </td>
+
+                <td className="p-3 text-green-600">
+                  {student.presentClasses}
+                </td>
+
+                <td className="p-3 text-red-600">
+                  {student.absentClasses}
+                </td>
+
+                <td className="p-3">
+
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+
+                    <div
+                      className={`h-3 rounded-full ${
+                        student.percentage >=
+                        75
+                          ? "bg-green-600"
+                          : "bg-red-600"
+                      }`}
+                      style={{
+                        width: `${student.percentage}%`,
+                      }}
+                    />
+
+                  </div>
+
+                  <p className="text-sm mt-1">
+                    {student.percentage}%
+                  </p>
+
+                </td>
+
+              </tr>
+
+            ))}
+
           </tbody>
+
         </table>
 
       </div>
-    </Layout>
-  );
-};
 
-export default AttendanceReport;
+    </div>
+  );
+}
+
+function Card({
+  title,
+  value,
+}) {
+  return (
+    <div className="bg-white rounded-xl shadow p-5">
+
+      <p className="text-gray-500">
+        {title}
+      </p>
+
+      <h2 className="text-3xl font-bold mt-2">
+        {value}
+      </h2>
+
+    </div>
+  );
+}

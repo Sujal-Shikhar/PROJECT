@@ -143,7 +143,9 @@ exports.getExams = async (
       search,
     } = req.query;
 
-    const query = {};
+    const query = {
+  isActive: true,
+};
 
     if (department)
       query.department = department;
@@ -189,16 +191,15 @@ exports.getExams = async (
         );
 
     res.status(200).json({
-      success: true,
-      total,
-      currentPage:
-        Number(page),
-      totalPages:
-        Math.ceil(
-          total / limit
-        ),
-      exams,
-    });
+  success: true,
+  exams,
+  pagination: {
+    total,
+    currentPage: Number(page),
+    totalPages: Math.ceil(total / Number(limit)),
+    limit: Number(limit),
+  },
+});
   } catch (error) {
     console.error(error);
 

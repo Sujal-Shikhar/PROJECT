@@ -23,10 +23,12 @@ export default function AddStudent() {
 
       navigate("/students");
     } catch (err) {
-      toast.error(
-        err.response?.data?.message ||
-          "Failed to add student"
-      );
+      console.log(err.response?.data);
+
+toast.error(
+  err.response?.data?.message ||
+  "Failed to add student"
+);
     } finally {
       setLoading(false);
     }

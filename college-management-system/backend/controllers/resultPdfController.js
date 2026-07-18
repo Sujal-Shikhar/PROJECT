@@ -27,20 +27,12 @@ exports.generateResultPDF = async (
       });
     }
 
-    const results =
-      await Result.find({
-        student: student._id,
-        isPublished: true,
-        isActive: true,
-      })
-        .populate(
-          "subject",
-          "name code credits"
-        )
-        .populate(
-          "exam",
-          "name"
-        );
+    const results = await Result.find({
+  student: student._id,
+  isActive: true,
+})
+.populate("subject", "name code credits")
+.populate("exam", "name");
 
     if (!results.length) {
       return res.status(404).json({
@@ -310,18 +302,14 @@ exports.generateResultByIdPDF =
       );
 
     } catch (error) {
+  console.error("========== PDF ERROR ==========");
+  console.error(error);
+  console.error(error.message);
+  console.error(error.stack);
 
-      console.error(error);
-
-      return res.status(500).json({
-
-        success: false,
-
-        message:
-          "Unable to generate PDF.",
-
-      });
-
-    }
-
+  return res.status(500).json({
+    success: false,
+    message: error.message,
+  });
+}
   };

@@ -88,14 +88,15 @@ exports.createSubject = async (
       subject,
     });
   } catch (error) {
-    console.error(error);
+  console.error("Create Subject Error:");
+  console.error(error);
+  console.error(error.errors);
 
-    res.status(500).json({
-      success: false,
-      message:
-        "Unable to create subject.",
-    });
-  }
+  res.status(500).json({
+    success: false,
+    message: error.message,
+  });
+}
 };
 
 /*
@@ -795,55 +796,66 @@ Dashboard Summary
 ==================================================
 */
 
-exports.dashboardSummary =
-  async (
-    req,
-    res
-  ) => {
-    try {
-      const latestSubjects =
-        await Subject.find({
-          isActive: true,
-        })
-          .populate(
-            "faculty",
-            "name employeeId"
-          )
-          .sort({
-            createdAt: -1,
-          })
-          .limit(5);
+/*
+==================================================
+Dashboard Summary
+==================================================
+*/
 
-      const totalCredits =
-        await Subject.aggregate([
-          {
-            $group: {
-              _id: null,
-              credits: {
-                $sum: "$credits",
-              },
-            },
-          },
-        ]);
+exports.dashboardSummary = async (req, res) => {
+  try {
+    const [
+      totalSubjects,
+      totalDepartments,
+      theorySubjects,
+      labSubjects,
+      electiveSubjects,
+      assignedFaculty,
+    ] = await Promise.all([
+      Subject.countDocuments({ isActive: true }),
 
-      res.status(200).json({
-        success: true,
+      Subject.distinct("department", {
+        isActive: true,
+      }).then((d) => d.length),
 
-        dashboard: {
-          latestSubjects,
-          totalCredits:
-            totalCredits[0]
-              ?.credits || 0,
-        },
-      });
-    } catch (error) {
-      console.error(error);
+      Subject.countDocuments({
+        isActive: true,
+        type: "Theory",
+      }),
 
-      res.status(500).json({
-        success: false,
-      });
-    }
-  };
+      Subject.countDocuments({
+        isActive: true,
+        type: "Lab",
+      }),
+
+      Subject.countDocuments({
+        isActive: true,
+        type: "Elective",
+      }),
+
+      Subject.countDocuments({
+        isActive: true,
+        faculty: { $ne: null },
+      }),
+    ]);
+
+    res.status(200).json({
+      totalSubjects,
+      totalDepartments,
+      theorySubjects,
+      labSubjects,
+      electiveSubjects,
+      assignedFaculty,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to fetch dashboard summary.",
+    });
+  }
+};
 
 /*
 ==================================================

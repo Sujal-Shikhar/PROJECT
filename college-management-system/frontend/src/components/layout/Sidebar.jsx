@@ -11,6 +11,9 @@ import {
   Bell,
   LogOut,
 } from "lucide-react";
+import {
+  ClipboardList,
+} from "lucide-react";
 
 import {
   NavLink,
@@ -46,9 +49,19 @@ const menus = [
   },
   {
     title: "Exams",
-    icon: FileText,
+    icon: ClipboardList,
     path: "/exams",
   },
+  {
+  title: "Results",
+  icon: FileText,
+  path: "/results",
+},
+{
+  title: "Internal Marks",
+  icon: ClipboardList,
+  path: "/internal-marks",
+},
   {
     title: "Fees",
     icon: IndianRupee,

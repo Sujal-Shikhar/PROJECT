@@ -120,7 +120,7 @@ AUTO CALCULATE BALANCE
 
 feeSchema.pre(
   "save",
-  function (next) {
+  function () {
 
     this.balance =
       this.totalFee -
@@ -151,7 +151,7 @@ feeSchema.pre(
 
     }
 
-    next();
+    
 
   }
 );

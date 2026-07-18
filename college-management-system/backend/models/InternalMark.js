@@ -122,7 +122,7 @@ AUTO TOTAL
 ==========================================
 */
 
-internalMarkSchema.pre("save", function (next) {
+internalMarkSchema.pre("save", function () {
 
   this.totalInternalMarks =
     this.assignmentMarks +
@@ -132,7 +132,7 @@ internalMarkSchema.pre("save", function (next) {
     this.vivaMarks +
     this.internalExamMarks;
 
-  next();
+  
 
 });
 

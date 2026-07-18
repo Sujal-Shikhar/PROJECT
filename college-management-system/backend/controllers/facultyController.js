@@ -385,19 +385,38 @@ exports.updateFaculty = async (
       }
     }
 
-    Object.assign(faculty, req.body);
+    // Don't allow these fields to be overwritten
+delete req.body.createdBy;
+delete req.body.updatedBy;
+delete req.body.__v;
+delete req.body._id;
 
-    if (req.body.email)
-      faculty.email =
-        req.body.email.toLowerCase();
+// Normalize values
+if (req.body.email) {
+  req.body.email = req.body.email.toLowerCase();
+}
 
-    if (req.body.employeeId)
-      faculty.employeeId =
-        req.body.employeeId.toUpperCase();
+if (req.body.employeeId) {
+  req.body.employeeId = req.body.employeeId.toUpperCase();
+}
 
-    faculty.updatedBy = req.user.id;
+// Preserve existing createdBy
+req.body.createdBy = faculty.createdBy;
 
-    await faculty.save();
+// Set updater
+req.body.updatedBy = req.user.id;
+
+// If address is accidentally sent as a string, ignore it
+if (
+  typeof req.body.address === "string" &&
+  req.body.address === "[object Object]"
+) {
+  delete req.body.address;
+}
+
+Object.assign(faculty, req.body);
+
+await faculty.save();
 
     res.status(200).json({
       success: true,

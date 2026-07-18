@@ -21,11 +21,7 @@ const designations = [
   "Lab Assistant",
 ];
 
-const genders = [
-  "Male",
-  "Female",
-  "Other",
-];
+const genders = ["Male", "Female", "Other"];
 
 const bloodGroups = [
   "A+",
@@ -38,10 +34,7 @@ const bloodGroups = [
   "O-",
 ];
 
-const maritalStatus = [
-  "Single",
-  "Married",
-];
+const maritalStatus = ["Single", "Married"];
 
 export default function FacultyForm({
   defaultValues = {},
@@ -58,11 +51,11 @@ export default function FacultyForm({
 
   const [preview, setPreview] = useState("");
 
-useEffect(() => {
-  if (defaultValues?.profileImage?.url) {
-    setPreview(defaultValues.profileImage.url);
-  }
-}, [defaultValues]);
+  useEffect(() => {
+    if (defaultValues?.profileImage?.url) {
+      setPreview(defaultValues.profileImage.url);
+    }
+  }, [defaultValues]);
 
   const imageChange = (e) => {
     const file = e.target.files[0];
@@ -80,7 +73,6 @@ useEffect(() => {
       {/* Profile Image */}
 
       <div>
-
         <label className="block mb-2 font-semibold">
           Profile Image
         </label>
@@ -88,7 +80,7 @@ useEffect(() => {
         {preview && (
           <img
             src={preview}
-            alt=""
+            alt="Preview"
             className="w-28 h-28 rounded-full object-cover mb-4"
           />
         )}
@@ -99,33 +91,30 @@ useEffect(() => {
           {...register("profileImage")}
           onChange={imageChange}
         />
-
       </div>
 
       {/* Basic Information */}
 
       <div>
-
         <h2 className="text-xl font-bold mb-4">
           Basic Information
         </h2>
 
         <div className="grid md:grid-cols-2 gap-5">
-
           <Input
             label="Faculty Name"
             name="name"
             register={register}
-            required
             errors={errors}
+            required
           />
 
           <Input
             label="Employee ID"
             name="employeeId"
             register={register}
-            required
             errors={errors}
+            required
           />
 
           <Input
@@ -133,32 +122,28 @@ useEffect(() => {
             name="email"
             type="email"
             register={register}
-            required
             errors={errors}
+            required
           />
 
           <Input
             label="Phone"
             name="phone"
             register={register}
-            required
             errors={errors}
+            required
           />
-
         </div>
-
       </div>
 
       {/* Professional */}
 
       <div>
-
         <h2 className="text-xl font-bold mb-4">
           Professional Details
         </h2>
 
         <div className="grid md:grid-cols-2 gap-5">
-
           <Select
             label="Department"
             name="department"
@@ -177,8 +162,8 @@ useEffect(() => {
             label="Qualification"
             name="qualification"
             register={register}
-            required
             errors={errors}
+            required
           />
 
           <Input
@@ -186,12 +171,14 @@ useEffect(() => {
             name="experience"
             type="number"
             register={register}
+            errors={errors}
           />
 
           <Input
             label="Specialization"
             name="specialization"
             register={register}
+            errors={errors}
           />
 
           <Input
@@ -199,6 +186,7 @@ useEffect(() => {
             name="joiningDate"
             type="date"
             register={register}
+            errors={errors}
           />
 
           <Input
@@ -206,22 +194,19 @@ useEffect(() => {
             name="salary"
             type="number"
             register={register}
+            errors={errors}
           />
-
         </div>
-
       </div>
 
       {/* Personal */}
 
       <div>
-
         <h2 className="text-xl font-bold mb-4">
           Personal Details
         </h2>
 
         <div className="grid md:grid-cols-2 gap-5">
-
           <Select
             label="Gender"
             name="gender"
@@ -234,6 +219,7 @@ useEffect(() => {
             name="dob"
             type="date"
             register={register}
+            errors={errors}
           />
 
           <Select
@@ -249,68 +235,68 @@ useEffect(() => {
             options={maritalStatus}
             register={register}
           />
-
         </div>
-
       </div>
 
       {/* Address */}
 
       <div>
-
         <h2 className="text-xl font-bold mb-4">
           Address
         </h2>
 
         <div className="grid md:grid-cols-2 gap-5">
-
           <Input
             label="Street"
             name="address.street"
             register={register}
+            errors={errors}
           />
 
           <Input
             label="City"
             name="address.city"
             register={register}
+            errors={errors}
           />
 
           <Input
             label="District"
             name="address.district"
             register={register}
+            errors={errors}
           />
 
           <Input
             label="State"
             name="address.state"
             register={register}
+            errors={errors}
           />
 
           <Input
             label="Pincode"
             name="address.pincode"
             register={register}
+            errors={errors}
           />
 
           <Input
             label="Country"
             name="address.country"
             register={register}
+            errors={errors}
           />
-
         </div>
-
       </div>
 
       <button
+        type="submit"
         disabled={loading}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg"
+        className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg disabled:opacity-50"
       >
         {loading ? "Saving..." : "Save Faculty"}
       </button>
-
     </form>
   );
 }
@@ -319,13 +305,18 @@ function Input({
   label,
   name,
   register,
-  errors,
-  required,
+  errors = {},
+  required = false,
   type = "text",
 }) {
+  const getNestedError = (obj, path) => {
+    return path.split(".").reduce((acc, key) => acc?.[key], obj);
+  };
+
+  const error = getNestedError(errors, name);
+
   return (
     <div>
-
       <label className="block mb-1 font-medium">
         {label}
       </label>
@@ -333,19 +324,16 @@ function Input({
       <input
         type={type}
         {...register(name, {
-          required: required
-            ? `${label} is required`
-            : false,
+          required: required ? `${label} is required` : false,
         })}
         className="w-full border rounded-lg p-2"
       />
 
-      {errors[name] && (
-        <p className="text-red-500 text-sm">
-          {errors[name].message}
+      {error && (
+        <p className="text-red-500 text-sm mt-1">
+          {error.message}
         </p>
       )}
-
     </div>
   );
 }
@@ -358,7 +346,6 @@ function Select({
 }) {
   return (
     <div>
-
       <label className="block mb-1 font-medium">
         {label}
       </label>
@@ -379,9 +366,7 @@ function Select({
             {option}
           </option>
         ))}
-
       </select>
-
     </div>
   );
 }

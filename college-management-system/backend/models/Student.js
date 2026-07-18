@@ -360,7 +360,7 @@ PRE SAVE
 ====================================
 */
 
-studentSchema.pre("save", function (next) {
+studentSchema.pre("save", function () {
   if (this.email) {
     this.email = this.email.toLowerCase();
   }
@@ -375,7 +375,7 @@ studentSchema.pre("save", function (next) {
       this.admissionNumber.toUpperCase();
   }
 
-  next();
+  
 });
 
 module.exports = mongoose.model(

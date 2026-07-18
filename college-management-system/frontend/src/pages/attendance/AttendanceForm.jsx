@@ -1,258 +1,369 @@
+import { useEffect, useState } from "react";
 import {
-  useEffect,
-  useState,
-} from "react";
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+import {
+  useForm,
+} from "react-hook-form";
+import toast from "react-hot-toast";
 
-import API from "../../api/axios";
+import {
+  createAttendance,
+  updateAttendance,
+  getAttendanceById,
+} from "../../api/attendanceApi";
 
-const AttendanceForm = ({
-  refreshAttendance,
-}) => {
-  const [students, setStudents] =
-    useState([]);
+import { getStudents } from "../../api/studentApi";
+import { getFaculty } from "../../api/facultyApi";
+import { getSubjects } from "../../api/subjectApi";
 
-  const [subjects, setSubjects] =
-    useState([]);
+export default function AttendanceForm() {
+  const navigate = useNavigate();
 
-  const [formData, setFormData] =
-    useState({
-      student: "",
-      subject: "",
-      date: new Date()
-        .toISOString()
-        .split("T")[0],
-      status: "Present",
-    });
+  const { id } = useParams();
+
+  const editing = Boolean(id);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm();
+
+  const [students, setStudents] = useState([]);
+
+  const [faculty, setFaculty] = useState([]);
+
+  const [subjects, setSubjects] = useState([]);
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchStudents();
-    fetchSubjects();
+    loadDropdowns();
+
+    if (editing) {
+      loadAttendance();
+    }
   }, []);
 
-  const fetchStudents =
-    async () => {
-      try {
-        const res =
-          await API.get(
-            "/students"
-          );
+  const loadDropdowns = async () => {
+    try {
+      const [
+        studentData,
+        facultyData,
+        subjectData,
+      ] = await Promise.all([
+        getStudents({ limit: 1000 }),
+        getFaculty({ limit: 1000 }),
+        getSubjects({ limit: 1000 }),
+      ]);
 
-        setStudents(
-          res.data.students ||
-            []
-        );
-      } catch (error) {
-        console.log(error);
-        setStudents([]);
-      }
-    };
+      setStudents(studentData.students);
 
-  const fetchSubjects =
-    async () => {
-      try {
-        const res =
-          await API.get(
-            "/subjects"
-          );
+      setFaculty(facultyData.faculty);
 
-        setSubjects(
-          res.data.subjects ||
-            []
-        );
-      } catch (error) {
-        console.log(error);
-        setSubjects([]);
-      }
-    };
-
-  const handleChange = (
-    e
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]:
-        e.target.value,
-    });
+      setSubjects(subjectData.subjects);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const handleSubmit =
-    async (e) => {
-      e.preventDefault();
+  const loadAttendance = async () => {
+    try {
+      const data =
+        await getAttendanceById(id);
 
-      try {
-        await API.post(
-          "/attendance",
+      const attendance =
+        data.attendance;
+
+      setValue(
+        "student",
+        attendance.student._id
+      );
+
+      setValue(
+        "faculty",
+        attendance.faculty._id
+      );
+
+      setValue(
+        "subject",
+        attendance.subject._id
+      );
+
+      setValue(
+        "lectureNumber",
+        attendance.lectureNumber
+      );
+
+      setValue(
+        "status",
+        attendance.status
+      );
+
+      setValue(
+        "remarks",
+        attendance.remarks
+      );
+
+      setValue(
+        "date",
+        attendance.date.substring(0, 10)
+      );
+    } catch (error) {
+      toast.error(
+        "Unable to load attendance"
+      );
+    }
+  };
+
+  const submit = async (formData) => {
+    try {
+      setLoading(true);
+
+      if (editing) {
+        await updateAttendance(
+          id,
           formData
         );
 
-        alert(
-          "Attendance Marked Successfully"
+        toast.success(
+          "Attendance updated"
+        );
+      } else {
+        await createAttendance(
+          formData
         );
 
-        setFormData({
-          student: "",
-          subject: "",
-          date: new Date()
-            .toISOString()
-            .split("T")[0],
-          status:
-            "Present",
-        });
-
-        if (
-          refreshAttendance
-        ) {
-          refreshAttendance();
-        }
-      } catch (error) {
-        console.log(error);
-
-        alert(
-          error
-            ?.response?.data
-            ?.message ||
-            "Failed to mark attendance"
+        toast.success(
+          "Attendance marked"
         );
       }
-    };
+
+      navigate("/attendance");
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          "Operation failed"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="bg-white shadow rounded p-6 mb-6">
+    <div className="max-w-4xl mx-auto bg-white rounded-xl shadow p-8">
 
-      <h2 className="text-2xl font-bold mb-4">
-        Mark Attendance
-      </h2>
+      <h1 className="text-3xl font-bold mb-8">
+
+        {editing
+          ? "Edit Attendance"
+          : "Mark Attendance"}
+
+      </h1>
 
       <form
-        onSubmit={
-          handleSubmit
-        }
-        className="grid md:grid-cols-2 gap-4"
+        onSubmit={handleSubmit(submit)}
+        className="grid md:grid-cols-2 gap-5"
       >
 
-        {/* Student */}
-
         <div>
-          <label className="block mb-1 font-medium">
+
+          <label className="font-medium">
             Student
           </label>
 
           <select
-            name="student"
-            value={
-              formData.student
-            }
-            onChange={
-              handleChange
-            }
-            className="w-full border p-2 rounded"
-            required
+            {...register(
+              "student",
+              {
+                required:
+                  "Student required",
+              }
+            )}
+            className="w-full border rounded-lg p-3 mt-1"
           >
+
             <option value="">
               Select Student
             </option>
 
             {students.map(
-              (
-                student
-              ) => (
+              (student) => (
                 <option
-                  key={
-                    student._id
-                  }
+                  key={student._id}
                   value={
                     student._id
                   }
                 >
-                  {
-                    student.name
-                  }
+                  {student.name}
                 </option>
               )
             )}
+
           </select>
+
+          <p className="text-red-500 text-sm">
+            {errors.student?.message}
+          </p>
+
         </div>
 
-        {/* Subject */}
+        <div>
+
+          <label className="font-medium">
+            Faculty
+          </label>
+
+          <select
+            {...register(
+              "faculty",
+              {
+                required:
+                  "Faculty required",
+              }
+            )}
+            className="w-full border rounded-lg p-3 mt-1"
+          >
+
+            <option value="">
+              Select Faculty
+            </option>
+
+            {faculty.map(
+              (item) => (
+                <option
+                  key={item._id}
+                  value={item._id}
+                >
+                  {item.name}
+                </option>
+              )
+            )}
+
+          </select>
+
+          <p className="text-red-500 text-sm">
+            {errors.faculty?.message}
+          </p>
+
+        </div>
 
         <div>
-          <label className="block mb-1 font-medium">
+
+          <label className="font-medium">
             Subject
           </label>
 
           <select
-            name="subject"
-            value={
-              formData.subject
-            }
-            onChange={
-              handleChange
-            }
-            className="w-full border p-2 rounded"
-            required
+            {...register(
+              "subject",
+              {
+                required:
+                  "Subject required",
+              }
+            )}
+            className="w-full border rounded-lg p-3 mt-1"
           >
+
             <option value="">
               Select Subject
             </option>
 
             {subjects.map(
-              (
-                subject
-              ) => (
+              (subject) => (
                 <option
-                  key={
-                    subject._id
-                  }
+                  key={subject._id}
                   value={
                     subject._id
                   }
                 >
-                  {subject.subjectName ||
-                    subject.name}
+                  {subject.name}
                 </option>
               )
             )}
+
           </select>
+
+          <p className="text-red-500 text-sm">
+            {errors.subject?.message}
+          </p>
+
         </div>
 
-        {/* Date */}
+        <div>
+
+          <label className="font-medium">
+            Lecture Number
+          </label>
+
+          <input
+            type="number"
+            min="1"
+            max="10"
+            {...register(
+              "lectureNumber",
+              {
+                required:
+                  "Lecture required",
+              }
+            )}
+            className="w-full border rounded-lg p-3 mt-1"
+          />
+
+          <p className="text-red-500 text-sm">
+            {
+              errors.lectureNumber
+                ?.message
+            }
+          </p>
+
+        </div>
 
         <div>
-          <label className="block mb-1 font-medium">
+
+          <label className="font-medium">
             Date
           </label>
 
           <input
             type="date"
-            name="date"
-            value={
-              formData.date
-            }
-            onChange={
-              handleChange
-            }
-            className="w-full border p-2 rounded"
-            required
+            {...register("date", {
+              required:
+                "Date required",
+            })}
+            className="w-full border rounded-lg p-3 mt-1"
           />
+
+          <p className="text-red-500 text-sm">
+            {errors.date?.message}
+          </p>
+
         </div>
 
-        {/* Status */}
-
         <div>
-          <label className="block mb-1 font-medium">
+
+          <label className="font-medium">
             Status
           </label>
 
           <select
-            name="status"
-            value={
-              formData.status
-            }
-            onChange={
-              handleChange
-            }
-            className="w-full border p-2 rounded"
+            {...register(
+              "status",
+              {
+                required:
+                  "Status required",
+              }
+            )}
+            className="w-full border rounded-lg p-3 mt-1"
           >
+
+            <option value="">
+              Select Status
+            </option>
+
             <option value="Present">
               Present
             </option>
@@ -260,22 +371,67 @@ const AttendanceForm = ({
             <option value="Absent">
               Absent
             </option>
+
+            <option value="Late">
+              Late
+            </option>
+
+            <option value="Medical Leave">
+              Medical Leave
+            </option>
+
           </select>
+
+          <p className="text-red-500 text-sm">
+            {errors.status?.message}
+          </p>
+
         </div>
 
-        {/* Submit Button */}
+        <div className="md:col-span-2">
 
-        <button
-          type="submit"
-          className="bg-blue-600 text-white p-3 rounded hover:bg-blue-700 md:col-span-2"
-        >
-          Save Attendance
-        </button>
+          <label className="font-medium">
+            Remarks
+          </label>
+
+          <textarea
+            rows="4"
+            {...register("remarks")}
+            className="w-full border rounded-lg p-3 mt-1"
+          />
+
+        </div>
+
+        <div className="md:col-span-2 flex gap-4">
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg"
+          >
+
+            {loading
+              ? "Saving..."
+              : editing
+              ? "Update Attendance"
+              : "Mark Attendance"}
+
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              navigate("/attendance")
+            }
+            className="bg-gray-500 text-white px-8 py-3 rounded-lg"
+          >
+            Cancel
+          </button>
+
+        </div>
 
       </form>
 
     </div>
   );
-};
-
-export default AttendanceForm;
+}

@@ -118,7 +118,7 @@ AUTO CALCULATE
 
 resultSchema.pre(
   "save",
-  function (next) {
+  function () {
 
     this.totalMarks =
       this.internalMarks +
@@ -185,7 +185,7 @@ resultSchema.pre(
 
     }
 
-    next();
+    
 
   }
 );
