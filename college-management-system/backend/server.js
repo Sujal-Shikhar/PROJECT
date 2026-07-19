@@ -40,6 +40,7 @@ const noticeRoutes = require("./routes/noticeRoutes");
 connectDB();
 
 const app = express();
+app.set("trust proxy", 1);
 
 /*
 ==================================================
