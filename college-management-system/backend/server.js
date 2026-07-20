@@ -105,11 +105,32 @@ CORS
 ==================================================
 */
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://project-bmr730m49-sujal-shikhars-projects.vercel.app",
+  "https://project-3m7736ecs-sujal-shikhars-projects.vercel.app",
+];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL
-      ? process.env.CLIENT_URL.split(",")
-      : ["http://localhost:5173"],
+    origin(origin, callback) {
+      // Allow requests without an Origin header (e.g. Postman)
+      if (!origin) return callback(null, true);
+
+      // Allow localhost and explicitly listed origins
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Allow all Vercel preview deployments for this project
+      if (
+        origin.endsWith("-sujal-shikhars-projects.vercel.app")
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
 
     credentials: true,
 
