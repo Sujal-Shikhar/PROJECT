@@ -52,10 +52,12 @@ export default function Dashboard() {
       <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-8 shadow">
 
         <h1 className="text-3xl font-bold">
-          Welcome Back!
+            Welcome Back 👋
         </h1>
 
-        
+        <p className="mt-2 text-blue-100 leading-relaxed">
+             Welcome to the College Management System. 
+        </p>
 
       </div>
 
